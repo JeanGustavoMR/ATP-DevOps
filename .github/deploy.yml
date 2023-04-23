@@ -1,0 +1,52 @@
+name: DEVOPS DEPLOY
+
+on:
+  push:
+    branches: [main]
+    
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    
+      - uses: actions/checkout@v3
+    
+      - name: Docker Login
+        uses: docker/login-action@v2.1.0
+        with:
+          username: ${{ secrets.USER }}  
+          password: ${{ secrets.PASSWORD }}
+          
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v3.2.0
+        with:
+          context: .
+          push: true
+          tags: |
+            jeangustavo/somativa:v1
+            jeangustavo/somativa:latest
+            
+
+      - name: Scan Web Application
+        uses: zaproxy/action-full-scan@v0.4.0
+        with:
+          token: ${{ secrets.TOKEN_GITHUB }}
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'https://jeanreactapp.netlify.app'
+          cmd_options: '-a'
+          issue_title: 'React Lab - Scan Report'
+
+      - name: Send message to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELE_SEND }}
+          token: ${{ secrets.TOKEN_TELE }}
+          message: |
+            Repository: ${{ github.repository }}
+
+            ${{ github.actor }} ${{ github.event.action }} push:
+
+            Push Link: ${{ github.event.head_commit.url }}
+            
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
