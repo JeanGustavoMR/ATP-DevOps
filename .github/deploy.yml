@@ -1,4 +1,4 @@
-name: DEVOPS DEPLOY
+name: DEVOPS deploy
 
 on:
   push:
