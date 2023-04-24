@@ -13,7 +13,7 @@ jobs:
     
       - name: Build Docker image
         run: |
-          docker build -t jeangustavo/somativadevops:latest -f docker/Dockerfile .
+          docker build -t jeangustavo/somativadevops:latest -f docker/DockerFile .
           docker tag jeangustavo/somativadevops:latest jeangustavo/somativadevops:${{ github.run_number }}
 
       - name: Test Application
