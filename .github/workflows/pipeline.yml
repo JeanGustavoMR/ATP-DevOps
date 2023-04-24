@@ -1,0 +1,40 @@
+name: Pipeline
+on: 
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Docker image
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+    
+      - name: Build Docker image
+        run: |
+          docker build -t jeangustavo/somativadevops:latest -f docker/Dockerfile .
+          docker tag jeangustavo/somativadevops:latest jeangustavo/somativadevops:${{ github.run_number }}
+
+      - name: Test Application
+        uses: AppThreat/sast-scan-action@v1.0.0
+        with:
+          type: nodejs
+
+      - name: Deploy Docker Image
+        run: |
+          docker login -u ${{ secrets.USER }} -p ${{ secrets.TOKEN }}
+          docker push jeangustavo/somativadevops:latest
+          docker push jeangustavo/somativadevops:${{ github.run_number }}
+
+      - name: Send message to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELE_SEND }}
+          token: ${{ secrets.TOKEN_TELE }}
+          message: |
+            Repository: ${{ github.repository }}
+            ${{ github.actor }} ${{ github.event.action }} push:
+            Push Link: ${{ github.event.head_commit.url }}
+            
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}

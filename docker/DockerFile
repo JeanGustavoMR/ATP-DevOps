@@ -1,0 +1,31 @@
+FROM node:16-buster-slim AS builder
+LABEL maintainer="Jean Gustavo"
+
+# Create app directory
+WORKDIR /app
+
+# Add package.json and package-lock.json
+ADD package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Add files
+ADD src ./src
+ADD public ./public
+
+# Runner image
+FROM node:16-buster-slim AS runner
+LABEL maintainer="Jean Gustavo"
+
+# Create app directory
+WORKDIR /app
+
+# Copy files from builder
+COPY --from=builder /app .
+
+# Run app
+CMD ["npm", "start"]
+
+# Expose port
+EXPOSE 3000
